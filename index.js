@@ -64,7 +64,7 @@ function search_file(file_path, leaf, req, res){
   finder.on('path', function(p, stat){
     var bpath = p.substring(leaf.length);
     if(path.basename(bpath).toLowerCase().indexOf(sk) != -1){
-      var item = {name: path.basename(p), url: bpath, file_type_cls: get_cls_by_state(stat)}
+      var item = {name: path.basename(p), url: p.substring(root.length), file_type_cls: get_cls_by_state(stat)}
       diritems.push(item);
     }
   });
