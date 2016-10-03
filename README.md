@@ -8,4 +8,4 @@ usage: node index.js -r {root_of_dir}
 ```
 
 ## preview
-![alt tag](https://github.com/dista/pi-explorer/blob/master/pi-explorer-gif2.gif?raw=true)
+![alt tag](https://github.com/dista/pi-explorer/blob/master/pi-explorer-gif3.gif?raw=true)
