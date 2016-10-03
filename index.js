@@ -6,11 +6,19 @@ var _ = require('lodash');
 var querystring = require('querystring');
 var findit = require('findit');
 var app = express();
+var argv = require('minimist')(process.argv);
 
 app.set('views', './views');
 app.set('view engine', 'pug');
 
-var root = "/mnt/westwood";
+if(!argv['r']){
+  console.log('usage: node index.js -r {root_of_dir}')
+  return;
+}
+
+argv['r'] = _.trimEnd(argv['r'], path.sep);
+
+var root = argv['r'];
 
 app.get('/__*', function(req, res){
   var file_path = querystring.unescape(req.path.substring(3));
@@ -54,7 +62,7 @@ function search_file(file_path, leaf, req, res){
 
   var diritems = [];
   finder.on('path', function(p, stat){
-    var bpath = p.substring(root.length);
+    var bpath = p.substring(leaf.length);
     if(path.basename(bpath).toLowerCase().indexOf(sk) != -1){
       var item = {name: path.basename(p), url: bpath, file_type_cls: get_cls_by_state(stat)}
       diritems.push(item);
