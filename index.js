@@ -71,6 +71,7 @@ function search_file(file_path, leaf, req, res){
 
   finder.on('end', function(){
     res.render('list_dir', { title: file_path, diritems: diritems, bread: create_bread(file_path)});
+    res.end();
   });
 }
 
@@ -109,6 +110,7 @@ app.get('*', function(req, res){
         return {name: v, url: tmp, file_type_cls: get_cls(tmp)};
       });
       res.render('list_dir', { title: file_path, diritems: items, bread: bread});
+      res.end();
     }
     return;
   } else if(state.isFile()){
