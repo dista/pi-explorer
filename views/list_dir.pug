@@ -1,0 +1,173 @@
+doctype html
+html
+  head
+    title=title
+    meta(http-equiv='X-UA-Compatible' content='IE=edge')
+    meta(name='viewport' content='width=device-width, initial-scale=1')
+    meta(charset='UTF-8')
+    script(src='/__jquery-3.1.1.min.js')
+    include icons.pug
+    style.
+
+      html, body {
+        margin: 0;
+        padding: 0px;
+        font-size: 16px;
+        font-family: arial;
+      }
+      ul#list {
+        padding: 0px;
+        margin: 0px;
+      }
+      li.file {
+        list-style-type: none;
+        line-height: 26px;
+        border-bottom: solid 1px #eee;
+        padding-left: 4px;
+      }
+      li.file a{
+        text-decoration: none;
+        color: #666;
+        display: block;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        padding-left: 8px;
+      }
+      li.file a:hover{
+        background-color: #eaf5f0;
+        border-left: solid 4px #48bc89;
+        color: #48bc89;
+      }
+      #bread {
+        padding: 0px;
+        margin: 0px;
+        margin-right: 2em;
+      }
+      #bread li{
+        list-style-type: none;
+        float: left;
+      }
+      .clearfix:after {
+        visibility: hidden;
+        display: block;
+        font-size: 0;
+        content: " ";
+        clear: both;
+        height: 0;
+      }
+      .clearfix { display: inline-block;}
+      #bread li a {
+        color: #48bc89;
+        text-decoration: none;
+      }
+      #bread_container{
+        position: fixed;
+        background-color: #fff;
+        padding: 10px 8px;
+        z-index: 100;
+        box-shadow: 0px 1px 2px #ccc;
+        width: 100%;
+      }
+
+      .sep {
+        margin-left: 5px;
+        margin-right: 5px;
+        color: #666;
+      }
+      #file_container{
+        position: relative;
+        top: 60px;
+      }
+
+      @media screen and (min-width: 960px) {
+        #base {
+          width: 660px;
+          margin-left: 50%;
+          left: -330px;
+          position: relative;
+        }
+
+        #bread_container {
+          width: 660px;
+        }
+      } 
+
+      #search {
+        position: absolute;
+        right: 1em;
+        font-size: 20px;
+        color: #666;
+        z-index: 2;
+        margin-top: 1px;
+      }
+      #search_input{
+        position: absolute;
+        right: 2em;
+        width: 0px;
+        visibility: hidden;
+        outline: none;
+        border: solid 1px #999;
+        padding: 2px;
+        padding-left: 2em;
+        font-size: 16px;
+        color: #666;
+      }
+      #search_input:focus{
+        border: solid 1px #48bc89;
+      }
+      #mask{
+        z-index: -1;
+        position: fixed;
+        left: 0px;
+        right: 0px;
+        top: 60px;
+        bottom: 0px;
+        opacity: 0.5;
+        background-color: #fff;
+      }
+      #search_text {
+        text-align: center;
+        z-index: 10001;
+        position: fixed;
+        top: 0px;
+        left: 0px;
+        right: 0px;
+        bottom: 0px;
+        color: #666;
+        padding-top: 60px;
+        display: none;
+      }
+
+      #search_text span {
+        background-color: #fff;
+      }
+
+    include list_dir_script.pug
+
+  body
+    p(id='search_text')
+      span Searching, please wait...
+    div(id='mask')
+    div(id='base')
+      div(id='bread_container')
+        i(class='search icon' id='search')
+        form(id='search_form')
+          input(id='search_input' placeholder='search by filename' name='key')
+        ul(id='bread' class='clearfix')
+          each v in bread
+            li
+              a(href=v.url) #{v.name}
+            -
+            if !v.is_last
+              li(class='sep') /
+               
+      div(id='file_container')
+        ul(id='list')
+          each v in diritems
+            li(class='file')
+              a(href=v.url) 
+                i(class='icon ' + v.file_type_cls)
+                span #{v.name}
