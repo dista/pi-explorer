@@ -32,11 +32,15 @@ app.get('/__*', function(req, res){
     }
   }
 
+  res.sendFile(file_path, options);
+
+  /*
   var ret = res.sendFile(file_path, options, function(result){
     if(result != null){
       res.status(400).end();
     }
   });
+  */
 });
 
 function get_cls_by_state(state){
@@ -123,11 +127,15 @@ app.get('*', function(req, res){
       }
     }
 
+    res.sendFile(file_path, options);
+
+    /*
     res.sendFile(file_path, options, function(result){
       if(result != null){
         res.status(400).end();
       }
     });
+    */
     return;
   }
 
