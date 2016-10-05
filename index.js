@@ -93,6 +93,46 @@ function create_bread(file_path){
     return bread;
 }
 
+function get_language(ext){
+  if(ext == '.html'){
+    return "markup";
+  }else if(ext == '.md'){
+    return 'markdown';
+  } else if(ext == '.css'){
+    return 'css';
+  } else if(ext == '.js'){
+    return 'js';
+  } else if(ext == '.sh'){
+    return 'bash';
+  } else if(ext == '.c'){
+    return 'c';
+  } else if(ext == '.h'){
+    return 'cpp';
+  } else if(ext == '.cpp' || ext == '.cc'){
+    return 'cpp';
+  } else if(ext == '.rb'){
+    return 'ruby';
+  } else if(ext == '.erl'){
+    return 'erlang';
+  } else if(ext == '.go'){
+    return 'go';
+  } else if(ext == '.java'){
+    return 'java';
+  } else if(ext == '.lua'){
+    return 'lua';
+  } else if(ext == '.mm'){
+    return 'objectivec';
+  } else if(ext == '.pl'){
+    return 'perl';
+  } else if(ext == '.php'){
+    return 'php';
+  } else if(ext == '.swift'){
+    return 'swift';
+  }
+
+  return null;
+}
+
 app.get('*', function(req, res){
   var file_path = querystring.unescape(req.path);
   var leaf = path.join(root, file_path);
@@ -118,16 +158,24 @@ app.get('*', function(req, res){
     }
     return;
   } else if(state.isFile()){
-    var content_type = mime.lookup(leaf);
-    var options = {
-      root: root,
-      dotfiles: 'deny',
-      headers: {
-        'Content-Type': content_type
-      }
-    }
+    var extname = path.extname(leaf);
+    var codename = get_language(extname);
 
-    res.sendFile(file_path, options);
+    if(codename == null){
+      var content_type = mime.lookup(leaf);
+      var options = {
+        root: root,
+        dotfiles: 'deny',
+        headers: {
+          'Content-Type': content_type
+        }
+      }
+
+      res.sendFile(file_path, options);
+    } else {
+      res.render('code', {title: file_path, lang: codename, code: fs.readFileSync(leaf)});
+      res.end();
+    }
 
     /*
     res.sendFile(file_path, options, function(result){
