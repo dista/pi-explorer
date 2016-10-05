@@ -161,7 +161,7 @@ app.get('*', function(req, res){
     var extname = path.extname(leaf);
     var codename = get_language(extname);
 
-    if(codename == null){
+    if(codename == null || req.param('raw')){
       var content_type = mime.lookup(leaf);
       var options = {
         root: root,
