@@ -10,15 +10,27 @@ html
       html, body {
         margin: 0;
         padding: 0px;
-        font-size: 12px;
+        font-size: 13px;
+        background-color: #f0f0f0;
       }
       pre#code{
-        margin: 0;
-        padding: 0px;
+      }
+
+      .code-body{
+        box-sizing: border-box;
+        min-width: 200px;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 45px;
+      }
+
+      .code-body code, .code-body pre {
+        background-color: #fff;
       }
 
   body
-    pre(id='code')
-      code(class='language-' + lang) #{code}
+    div(class='code-body')
+      pre(id='code')
+        code(class='language-' + lang) #{code}
 
     script(src='/__prism.js')
