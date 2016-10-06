@@ -13,19 +13,23 @@ html
         font-size: 13px;
         background-color: #f0f0f0;
       }
-      pre#code{
-      }
 
-      .code-body{
-        box-sizing: border-box;
-        min-width: 200px;
-        max-width: 980px;
-        margin: 0 auto;
-        padding: 45px;
+      @media screen and (min-width: 960px) {
+        .code-body{
+          box-sizing: border-box;
+          min-width: 200px;
+          max-width: 980px;
+          margin: 0 auto;
+          padding: 45px;
+        }
       }
 
       .code-body code, .code-body pre {
         background-color: #fff;
+      }
+
+      .code-body pre, .code-body code {
+        margin: 0;
       }
 
   body
