@@ -126,6 +126,8 @@ function get_language(ext){
     return 'perl';
   } else if(ext == '.php'){
     return 'php';
+  } else if(ext == '.py'){
+    return 'python';
   } else if(ext == '.swift'){
     return 'swift';
   }
