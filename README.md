@@ -14,6 +14,7 @@ then visit `http://{your_ip_of_server}:8003` with your browser.
 * Support any size screen
 * Search under current location
 * Syntax highlight for some language, including `bash, java, css, js, ...`
+* markdown preview
 
 ## preview
 ![alt tag](https://github.com/dista/pi-explorer/blob/master/pi-explorer-gif3.gif?raw=true)
