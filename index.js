@@ -5,6 +5,7 @@ var mime = require('mime');
 var _ = require('lodash');
 var querystring = require('querystring');
 var findit = require('findit');
+var markdown = require('markdown').markdown;
 var app = express();
 var argv = require('minimist')(process.argv);
 
@@ -174,6 +175,9 @@ app.get('*', function(req, res){
       }
 
       res.sendFile(file_path, options);
+    } else if(codename == 'markdown'){
+      res.render('markdown', {title: file_path, markdown: markdown.toHTML(fs.readFileSync(leaf).toString('utf8'))});
+      res.end();
     } else {
       res.render('code', {title: file_path, lang: codename, code: fs.readFileSync(leaf)});
       res.end();
