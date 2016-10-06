@@ -11,6 +11,7 @@ then visit `http://{your_ip_of_server}:8003` with your browser.
 
 ## Feature
 * Basic file explore
+* Support any size screen
 * Search under current location
 * Syntax highlight for some language, including `bash, java, css, js, ...`
 
