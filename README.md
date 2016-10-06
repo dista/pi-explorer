@@ -17,4 +17,4 @@ then visit `http://{your_ip_of_server}:8003` with your browser.
 * markdown preview
 
 ## preview
-![alt tag](https://github.com/dista/pi-explorer/blob/master/pi-explorer-gif3.gif?raw=true)
+![alt tag](https://github.com/dista/pi-explorer/blob/master/pi-explorer-gif4.gif?raw=true)
