@@ -154,7 +154,15 @@ app.get('*', function(req, res){
       var bread = create_bread(file_path);
       var items = dirs.map(function(v){
         var tmp = path.join(file_path, v);
-        return {name: v, url: tmp, file_type_cls: get_cls(tmp)};
+
+        var ftc = get_cls(tmp);
+
+        var ret = {name: v, url: tmp, file_type_cls: ftc};
+        if(_.startsWith(ftc, 'folder')){
+          ret.name += "/";
+        }
+
+        return ret;
       });
       res.render('list_dir', { title: file_path, diritems: items, bread: bread});
       res.end();
