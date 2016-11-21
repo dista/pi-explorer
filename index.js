@@ -97,6 +97,8 @@ function create_bread(file_path){
 function get_language(bm, ext){
   if(bm == 'Makefile'){
     return 'makefile'
+  } else if(bm == 'Gemfile' || bm == 'Rakefile'){
+    return 'ruby'
   }
 
   if(ext == '.html'){
@@ -179,7 +181,10 @@ app.get('*', function(req, res){
     var bm = path.basename(leaf);
     var codename = get_language(bm, extname);
 
-    if(codename == null || req.param('raw')){
+    var stats = fs.statSync(leaf);
+    var file_size = stats['size'];
+
+    if(codename == null || req.param('raw') || file_size > 500000){
       var content_type = mime.lookup(leaf);
       var options = {
         root: root,
