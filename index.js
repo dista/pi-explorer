@@ -94,7 +94,11 @@ function create_bread(file_path){
     return bread;
 }
 
-function get_language(ext){
+function get_language(bm, ext){
+  if(bm == 'Makefile'){
+    return 'makefile'
+  }
+
   if(ext == '.html'){
     return "markup";
   }else if(ext == '.md'){
@@ -131,6 +135,8 @@ function get_language(ext){
     return 'python';
   } else if(ext == '.swift'){
     return 'swift';
+  } else if(ext == '.s'){
+    return 'nasm';
   }
 
   return null;
@@ -170,7 +176,8 @@ app.get('*', function(req, res){
     return;
   } else if(state.isFile()){
     var extname = path.extname(leaf);
-    var codename = get_language(extname);
+    var bm = path.basename(leaf);
+    var codename = get_language(bm, extname);
 
     if(codename == null || req.param('raw')){
       var content_type = mime.lookup(leaf);
