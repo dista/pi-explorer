@@ -2,7 +2,7 @@
 Web File Explorer UI for linux server
 
 ## Install
-It is just a nodejs app, so using following to install after install nodejs
+It is just a nodejs app, so using following to install after installing nodejs
 ```
 npm install
 ```
