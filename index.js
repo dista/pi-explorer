@@ -129,7 +129,7 @@ function get_language(bm, ext){
     return 'lua';
   } else if(ext == '.mm'){
     return 'objectivec';
-  } else if(ext == '.pl'){
+  } else if(ext == '.pl' || ext == '.perl'){
     return 'perl';
   } else if(ext == '.php'){
     return 'php';

@@ -1,6 +1,12 @@
 # pi-explorer
 Web File Explorer UI for linux server
 
+## Install
+It is just a nodejs app, so using following to install after install nodejs
+```
+npm install
+```
+
 ## Usage
 start program at server
 ```
