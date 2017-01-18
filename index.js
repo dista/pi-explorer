@@ -119,7 +119,7 @@ function get_language(bm, ext){
     return 'cpp';
   } else if(ext == '.rb'){
     return 'ruby';
-  } else if(ext == '.erl'){
+  } else if(ext == '.erl' || ext == '.hrl'){
     return 'erlang';
   } else if(ext == '.go'){
     return 'go';
