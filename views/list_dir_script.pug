@@ -11,7 +11,7 @@ script.
 
       $('#search').animate({'right': '2em'}, ANIMATE_DURATION, function(){
         $(this).css('color', '#666');
-        $('#mask').css('z-index', -1);
+        $('#mask').css('z-index', -1).css('opacity', 0.0);
         });
 
       $('#bread').animate({'opacity': 1}, ANIMATE_DURATION, function(){
@@ -30,7 +30,7 @@ script.
         }
       );
       $(this).animate({'right': '320px'}, ANIMATE_DURATION, function(){
-        $('#mask').css('z-index', 1000);
+        $('#mask').css('z-index', 1000).css('opacity', 0.5);
         $(this).css('color', '#ccc');
         $('#mask').bind('click', function(){
           $(this).unbind('click');
