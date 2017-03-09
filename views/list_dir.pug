@@ -18,6 +18,13 @@ html
         font-size: 16px;
         font-family: arial;
       }
+      html{
+        min-height: 100%;
+      }
+      body{
+        background: -webkit-linear-gradient(top, rgb(255, 255, 255) 0%, rgb(247, 247, 247) 41%, rgb(241, 241, 241) 100%);
+        min-height: 100%;
+      }
       ul#list {
         padding: 0px;
         margin: 0px;
@@ -25,7 +32,7 @@ html
       li.file {
         list-style-type: none;
         line-height: 26px;
-        border-bottom: solid 1px #eee;
+        border-bottom: solid 1px #b9b9b9;
         padding-left: 0px;
       }
       li.file a{
@@ -83,7 +90,7 @@ html
       }
       #file_container{
         position: relative;
-        top: 60px;
+        padding-top: 60px;
       }
 
       @media screen and (min-width: 960px) {
