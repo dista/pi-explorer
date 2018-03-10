@@ -146,6 +146,12 @@ function get_language(bm, ext){
 
 app.get('*', function(req, res){
   var file_path = querystring.unescape(req.path);
+  var is_raw = false;
+
+  if(req.param('raw')){
+    is_raw = true;
+  }
+
   var leaf = path.join(root, file_path);
   var state = fs.lstatSync(leaf);
 
@@ -181,26 +187,31 @@ app.get('*', function(req, res){
     var bm = path.basename(leaf);
     var codename = get_language(bm, extname);
 
-    var stats = fs.statSync(leaf);
-    var file_size = stats['size'];
-
-    if(codename == null || req.param('raw') || file_size > 500000){
-      var content_type = mime.lookup(leaf);
-      var options = {
-        root: root,
-        dotfiles: 'deny',
-        headers: {
-          'Content-Type': content_type
-        }
-      }
-
-      res.sendFile(file_path, options);
-    } else if(codename == 'markdown'){
-      res.render('markdown', {title: file_path, markdown: markdown.toHTML(fs.readFileSync(leaf).toString('utf8'))});
+    if(!is_raw && extname == ".mp4"){
+      res.render('video', {title: file_path, src: file_path + "?raw=1"});
       res.end();
     } else {
-      res.render('code', {title: file_path, lang: codename, code: fs.readFileSync(leaf)});
-      res.end();
+      var stats = fs.statSync(leaf);
+      var file_size = stats['size'];
+
+      if(codename == null || is_raw || file_size > 500000){
+        var content_type = mime.lookup(leaf);
+        var options = {
+          root: root,
+          dotfiles: 'deny',
+          headers: {
+            'Content-Type': content_type
+          }
+        }
+
+        res.sendFile(file_path, options);
+      } else if(codename == 'markdown'){
+        res.render('markdown', {title: file_path, markdown: markdown.toHTML(fs.readFileSync(leaf).toString('utf8'))});
+        res.end();
+      } else {
+        res.render('code', {title: file_path, lang: codename, code: fs.readFileSync(leaf)});
+        res.end();
+      }
     }
 
     /*

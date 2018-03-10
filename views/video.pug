@@ -1,0 +1,27 @@
+doctype html
+html
+  head
+    title=title
+    meta(http-equiv='X-UA-Compatible' content='IE=edge')
+    meta(name='viewport' content='width=device-width, initial-scale=1')
+    meta(charset='UTF-8')
+    link(rel='stylesheet' href='/__video-js.min.css')
+    script(src='/__video.min.js')
+    script.
+      window.HELP_IMPROVE_VIDEOJS = false;
+    style.
+      body {
+        margin: 0;
+      }
+      #my-player {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+      }
+  body 
+  video(id='my-player' class='video-js' controls preload='auto' data-setup='{}')
+      source(src=src)
