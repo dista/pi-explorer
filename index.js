@@ -54,12 +54,6 @@ function get_cls_by_state(state){
   return "";
 }
 
-function get_cls(f){
-  var state = fs.lstatSync(path.join(root, f));
-
-  return get_cls_by_state(state);
-}
-
 function search_file(file_path, leaf, req, res){
   var finder = findit(leaf);
 
@@ -169,15 +163,21 @@ app.get('*', function(req, res){
       var items = dirs.map(function(v){
         var tmp = path.join(file_path, v);
 
-        var ftc = get_cls(tmp);
+        var fstat = fs.lstatSync(path.join(root, tmp));
 
-        var ret = {name: v, url: tmp, file_type_cls: ftc};
+        var ftc = get_cls_by_state(fstat)
+
+        var ret = {name: v, url: tmp, file_type_cls: ftc, fstat: fstat};
         if(_.startsWith(ftc, 'folder')){
           ret.name += "/";
         }
 
         return ret;
       });
+
+      items.sort(function(a, b){
+        return -(a.fstat.mtime.getTime() - b.fstat.mtime.getTime())
+      })
       res.render('list_dir', { title: file_path, diritems: items, bread: bread});
       res.end();
     }
