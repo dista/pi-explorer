@@ -14,7 +14,7 @@ script.
         $('#mask').css('z-index', -1).css('opacity', 0.0);
         });
 
-      $('#bread').animate({'opacity': 1}, ANIMATE_DURATION, function(){
+      $('.search_related').animate({'opacity': 1}, ANIMATE_DURATION, function(){
         $(this).css('visibility', 'visible');
         });
     }
@@ -37,9 +37,14 @@ script.
           collapse_search();
           });
         });
-      $("#bread").animate({'opacity': 0}, ANIMATE_DURATION, function(){
+      $(".search_related").animate({'opacity': 0}, ANIMATE_DURATION, function(){
         $(this).css('visibility', 'hidden');
         //$('#file_container').css('visibility', 'hidden');
         });
     });
   });
+
+  function ffmpeg_it(url) {
+    $("#ffmpeg").addClass('loading');
+    $.get(url + '?action=ffmpeg');
+  }

@@ -5,7 +5,9 @@ html
     meta(http-equiv='X-UA-Compatible' content='IE=edge')
     meta(name='viewport' content='width=device-width, initial-scale=1')
     meta(charset='UTF-8')
+    link(rel='stylesheet' href='/__semantic.min.css')
     script(src='/__jquery-3.1.1.min.js')
+    script(src='/__semantic.min.js')
     include icons.pug
     style.
 
@@ -15,8 +17,9 @@ html
       html, body {
         margin: 0;
         padding: 0px;
-        font-size: 16px;
+        #font-size: 16px;
         font-family: arial;
+        height: auto;
       }
       html{
         min-height: 100%;
@@ -28,6 +31,9 @@ html
       ul#list {
         padding: 0px;
         margin: 0px;
+      }
+      i.icon.conv {
+        width: 2em;
       }
       li.file {
         list-style-type: none;
@@ -91,7 +97,14 @@ html
       }
       #file_container{
         position: relative;
+      }
+
+      .no_bar {
         padding-top: 60px;
+      }
+
+      .has_bar {
+        padding-top: 85px;
       }
 
       @media screen and (min-width: 960px) {
@@ -157,16 +170,16 @@ html
         background-color: #fff;
       }
 
-      .loader,
-      .loader:before,
-      .loader:after {
+      .loader_x,
+      .loader_x:before,
+      .loader_x:after {
       background: #333;
       -webkit-animation: load1 1s infinite ease-in-out;
       animation: load1 1s infinite ease-in-out;
       width: 1em;
       height: 4em;
       }
-      .loader {
+      .loader_x {
       color: #333;
       text-indent: -9999em;
       margin: 88px auto;
@@ -178,18 +191,18 @@ html
       -webkit-animation-delay: -0.16s;
       animation-delay: -0.16s;
       }
-      .loader:before,
-      .loader:after {
+      .loader_x:before,
+      .loader_x:after {
       position: absolute;
       top: 0;
       content: '';
       }
-      .loader:before {
+      .loader_x:before {
       left: -1.5em;
       -webkit-animation-delay: -0.32s;
       animation-delay: -0.32s;
       }
-      .loader:after {
+      .loader_x:after {
       left: 1.5em;
       }
       @-webkit-keyframes load1 {
@@ -221,25 +234,30 @@ html
     include list_dir_script.pug
 
   body
-    div(class='loader' id='search_text')
+    div(class='loader_x' id='search_text')
     div(id='mask')
     div(id='base')
       div(id='bread_container')
-        i(class='search icon' id='search')
+        i(class='search icon_x' id='search')
         form(id='search_form')
           input(id='search_input' placeholder='search by filename' name='key')
-        ul(id='bread' class='clearfix')
+        ul(id='bread' class='clearfix search_related')
           each v in bread
             li
               a(href=v.url) #{v.name}
             -
             if !v.is_last
               li(class='sep') /
+        div(id='action_bar' class='search_related')
+          if shouldConv
+            button(id='ffmpeg' class='ui icon green button tiny' onclick='ffmpeg_it("' + bread[bread.length - 1].url + '")')
+              i(class='film icon conv')
+              | FFmpeg
                
-      div(id='file_container')
+      div(id='file_container' class=hasActionBar ? 'has_bar' : 'no_bar')
         ul(id='list')
           each v in diritems
             li(class='file')
               a(href=v.url) 
-                i(class='icon ' + v.file_type_cls)
+                i(class='icon_x ' + v.file_type_cls)
                 span #{v.name}

@@ -8,6 +8,7 @@ var findit = require('findit');
 var markdown = require('markdown').markdown;
 var app = express();
 var argv = require('minimist')(process.argv);
+var media = require('./media.js')
 
 app.set('views', './views');
 app.set('view engine', 'pug');
@@ -52,6 +53,16 @@ function get_cls_by_state(state){
   }
 
   return "";
+}
+
+function do_action(file_path, leaf, req, res){
+  var value = req.param('action');
+
+  if (value == 'ffmpeg') {
+    media.toHtml5Supported(leaf);
+  }
+
+  res.end();
 }
 
 function search_file(file_path, leaf, req, res){
@@ -157,6 +168,8 @@ app.get('*', function(req, res){
   if(state.isDirectory()){
     if(req.param('key')){
       search_file(file_path, leaf, req, res);
+    } else if (req.param('action')) {
+      do_action(file_path, leaf, req, res);
     } else {
       var dirs = fs.readdirSync(leaf);
       var bread = create_bread(file_path);
@@ -178,7 +191,12 @@ app.get('*', function(req, res){
       items.sort(function(a, b){
         return -(a.fstat.mtime.getTime() - b.fstat.mtime.getTime())
       })
-      res.render('list_dir', { title: file_path, diritems: items, bread: bread});
+
+      var shouldConv = media.hasHtml5UnsupportedMedia(items);
+      var hasActionBar = shouldConv;
+
+      res.render('list_dir', { title: file_path, diritems: items, bread: bread,
+        shouldConv: shouldConv, hasActionBar: hasActionBar});
       res.end();
     }
     return;
@@ -227,4 +245,5 @@ app.get('*', function(req, res){
   res.end('not implemented');
 });
 
+media.init();
 app.listen(8003);
