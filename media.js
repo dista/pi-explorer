@@ -1,5 +1,7 @@
 var path = require('path');
 var fs = require('fs');
+var conv = require('./conv.js')
+//var async = require('async');
 
 var unsupportedMediaExts = ['mov', 'mkv', 'rmvb'];
 var workingDirs = [];
@@ -7,34 +9,46 @@ var workingDirs = [];
 function inArray(a, c){
   for (var i = 0; i < c.length; i++) {
     if (c[i] == a) {
-      return true
+      return true;
     }
   }
 
-  return false
+  return false;
+}
+
+function shouldConv(name){
+  var extname = path.extname(name).toLowerCase();
+
+  if (extname.length > 0 && extname[0] == '.') {
+    extname = extname.substring(1);
+  }
+
+  if (inArray(extname, unsupportedMediaExts)) {
+    return true;
+  }
+
+  return false;
 }
 
 function hasHtml5UnsupportedMedia(items){
   for (var i = 0; i < items.length; i++) {
     var item = items[i];
-    var extname = path.extname(item.name).toLowerCase();
 
-    if (extname.length > 0 && extname[0] == '.') {
-      extname = extname.substring(1);
-    }
-
-    if (inArray(extname, unsupportedMediaExts)) {
-      return true
+    if (shouldConv(item.name)) {
+      return true;
     }
   }
 
-  return false
+  return false;
 }
 
 module.exports.hasHtml5UnsupportedMedia = hasHtml5UnsupportedMedia;
 
 function toHtml5Supported(dir){
+  console.log('push to');
+  console.log(dir);
   if (inArray(dir, workingDirs)) {
+    console.log('in array');
     return;
   }
 
@@ -49,6 +63,28 @@ function doJobInternal(job, doneCb){
       doneCb(err);
       return;
     }
+
+    var convFiles = files.filter(function(v){
+      return shouldConv(v);
+    }).map(function(v){
+      return path.join(job, v);
+    });
+
+    conv(convFiles, true, function(err, goods, bads){
+      console.log('convert result:');
+      console.log(err);
+      console.log(goods);
+
+      doneCb();
+
+      /*
+      async.eachLimit(goods, 4, function(item, cb){
+        fs.unlink(item, cb);
+      }, function(){
+        doneCb();
+      });
+      */
+    });
   });
 }
 
