@@ -1,5 +1,51 @@
 script.
+  var viewReady = false;
+  var ws = null;
+
+  function setupws(){
+    ws = new WebSocket("ws://" + window.location.hostname + ":" + window.location.port + "/messaging");
+
+    ws.onopen = function (event) {
+      console.log("onopen");
+      console.log(event);
+      ws.send('hi server');
+    }
+    
+    ws.onclose = function (event) {
+      console.log("onclose");
+      console.log(event);
+
+      ws = null;
+    }
+
+    ws.onerror = function (event) {
+      console.log("onerror");
+      console.log(event);
+    }
+
+    ws.onmessage = function (event) {
+      //console.log("onmessage");
+      //console.log(event);
+
+      if (viewReady) {
+        var msg = JSON.parse(event.data);
+        if (msg.type == 'notify') {
+          $('.view_on_ws').removeClass('hide');
+          $('#out_file').html(msg.file.substr(msg.file.lastIndexOf('/') + 1));
+          $('#out_frame').html(msg.progress.frames);
+          $('#out_fps').html(msg.progress.currentFps);
+          $('#out_kbps').html(msg.progress.currentKbps);
+          $('#out_time').html(msg.progress.timemark);
+          $('#out_percent').html(msg.progress.percent.toFixed(2) + "%");
+        }
+      }
+    }
+  }
+
+  setupws();
+
   $(function(){
+    viewReady = true;
     var ANIMATE_DURATION = 100;
 
     $('#mask').css('top', ($('#bread_container').outerHeight() + 1) + "px");
@@ -45,6 +91,11 @@ script.
   });
 
   function ffmpeg_it(url) {
+    if($("#ffmpeg").hasClass('loading')){
+      return;
+    }
+
     $("#ffmpeg").addClass('loading');
     $.get(url + '?action=ffmpeg');
+
   }

@@ -28,7 +28,7 @@ ffmpeg.prototype.audioQuality = function(q) {
   return this;
 }
 
-function conv(files, rm, callback){
+function conv(files, rm, callback, onProgress){
   var goods = [];
   var bads = [];
   async.eachOfSeries(files, function(file, index, main_cb){
@@ -102,9 +102,15 @@ function conv(files, rm, callback){
             cmd.noAudio();
           }
 
+          if (onProgress){
+            cmd.on('progress', function(progress){
+              onProgress(file, progress);
+            });
+          }
+
           var output = replaceExt(file, '.mp4');
           cmd.output(output)
-            .outputOptions('-threads 1')
+            .outputOptions('-threads 2')
             .on('end', function(stdout, stderr){
               console.log('end');
               goods.push(file);

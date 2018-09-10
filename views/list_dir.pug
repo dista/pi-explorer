@@ -90,6 +90,17 @@ html
         width: 100%;
       }
 
+      #status{
+        position: fixed;
+        bottom: 0px;
+        background-color: #fff;
+        padding: 10px 8px;
+        z-index: 100;
+        box-shadow: 0px 1px 2px #ccc;
+        height: 91px;
+        width: 100%;
+      }
+
       .sep {
         margin-left: 5px;
         margin-right: 5px;
@@ -107,6 +118,14 @@ html
         padding-top: 85px;
       }
 
+      #out_file {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        padding-top: 8px;
+        padding-bottom: 2px;
+      }
+
       @media screen and (min-width: 960px) {
         #base {
           width: 660px;
@@ -116,6 +135,10 @@ html
         }
 
         #bread_container {
+          width: 660px;
+        }
+
+        #status {
           width: 660px;
         }
       } 
@@ -229,7 +252,20 @@ html
       height: 5em;
       }
       }
-
+      #footer {
+        height: 90px;
+      }
+      .hide {
+        display: none;
+      }
+      #status_inner {
+        position: relative;
+        padding-top: 8px;
+      }
+      #status_inner .ui.grid>.row {
+        padding-bottom: 2px;
+        padding-top: 2px;
+      }
 
     include list_dir_script.pug
 
@@ -253,7 +289,23 @@ html
             button(id='ffmpeg' class='ui icon green button tiny' onclick='ffmpeg_it("' + bread[bread.length - 1].url + '")')
               i(class='film icon conv')
               | FFmpeg
-               
+      div(id='status' class='view_on_ws hide')         
+        div(id='status_inner')
+          div(class='ui on column grid')
+            div(class='column' id='out_file')
+          div(class='ui grid')
+            div(class='row')
+              div(class='three wide column') frame
+              div(class='three wide column') fps
+              div(class='three wide column') kbps
+              div(class='four wide column') time
+              div(class='three wide column') percent
+            div(class='row')
+              div(class='three wide column' id='out_frame')
+              div(class='three wide column' id='out_fps')
+              div(class='three wide column' id='out_kbps')
+              div(class='four wide column' id='out_time')
+              div(class='three wide column' id='out_percent')
       div(id='file_container' class=hasActionBar ? 'has_bar' : 'no_bar')
         ul(id='list')
           each v in diritems
@@ -261,3 +313,4 @@ html
               a(href=v.url) 
                 i(class='icon_x ' + v.file_type_cls)
                 span #{v.name}
+      div(id='footer' class='view_on_ws hide')

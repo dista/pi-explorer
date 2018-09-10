@@ -7,8 +7,10 @@ var querystring = require('querystring');
 var findit = require('findit');
 var markdown = require('markdown').markdown;
 var app = express();
+var expressWs = require('express-ws')(app);
 var argv = require('minimist')(process.argv);
-var media = require('./media.js')
+var media = require('./media.js');
+var notify = require('./notify.js');
 
 app.set('views', './views');
 app.set('view engine', 'pug');
@@ -21,6 +23,20 @@ if(!argv['r']){
 argv['r'] = _.trimEnd(argv['r'], path.sep);
 
 var root = argv['r'];
+
+app.ws('/messaging', function(ws, req){
+  console.log('new req');
+  notify.addWs(ws);
+  ws.on('message', function(msg){
+    console.log("websocket message");
+    console.log(msg);
+  });
+
+  ws.on('close', function(evt){
+    console.log('close websocket');
+    notify.removeWs(ws);
+  });
+});
 
 app.get('/__*', function(req, res){
   var file_path = querystring.unescape(req.path.substring(3));

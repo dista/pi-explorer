@@ -1,6 +1,7 @@
 var path = require('path');
 var fs = require('fs');
-var conv = require('./conv.js')
+var conv = require('./conv.js');
+var notify = require('./notify.js');
 //var async = require('async');
 
 var unsupportedMediaExts = ['mov', 'mkv', 'rmvb'];
@@ -84,6 +85,10 @@ function doJobInternal(job, doneCb){
         doneCb();
       });
       */
+    }, function(file, progress){
+      //console.log(file);
+      //console.log(progress);
+      notify.notify(JSON.stringify({file: file, type: 'notify', progress: progress}));
     });
   });
 }
