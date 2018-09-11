@@ -25,7 +25,6 @@ html
         min-height: 100%;
       }
       #progress_bar {
-        background-color: #cabc0a;
       }
       #progress_bar, #progress_bar_ct {
         border-radius: 0;
@@ -129,8 +128,8 @@ html
         white-space: nowrap;
         overflow: hidden;
         padding-top: 1em;
+        padding-left: 1.5em;
         padding-bottom: 2px;
-        text-align: center;
       }
 
       @media screen and (min-width: 960px) {
@@ -274,6 +273,9 @@ html
         padding-bottom: 2px;
         padding-top: 2px;
       }
+      #out_percent {
+        padding-right: 1.5em;
+      }
 
     include list_dir_script.pug
 
@@ -298,11 +300,12 @@ html
               i(class='film icon conv')
               | FFmpeg
       div(id='status' class='view_on_ws hide')         
-        div(class='ui top attached progress' id='progress_bar_ct')
+        div(class='ui green top attached progress' id='progress_bar_ct')
           div(id='progress_bar' class='bar' style='transition-duration: 300ms;')
         div(id='status_inner')
-          div(class='ui column grid')
-            div(class='column' id='out_file')
+          div(class='ui two column grid')
+            div(class='twelve wide column' id='out_file')
+            div(class='four wide right aligned column' id='out_percent')
       div(id='file_container' class=hasActionBar ? 'has_bar' : 'no_bar')
         ul(id='list')
           each v in diritems

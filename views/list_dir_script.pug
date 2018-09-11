@@ -33,6 +33,7 @@ script.
           $('.view_on_ws').removeClass('hide');
           $('#out_file').html(msg.file.substr(msg.file.lastIndexOf('/') + 1));
           $('#progress_bar').css('width', msg.progress.percent.toFixed(2) + "%");
+          $('#out_percent').html(msg.progress.percent.toFixed(2) + "%");
         }
       }
     }
