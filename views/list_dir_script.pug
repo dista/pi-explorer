@@ -32,11 +32,7 @@ script.
         if (msg.type == 'notify') {
           $('.view_on_ws').removeClass('hide');
           $('#out_file').html(msg.file.substr(msg.file.lastIndexOf('/') + 1));
-          $('#out_frame').html(msg.progress.frames);
-          $('#out_fps').html(msg.progress.currentFps);
-          $('#out_kbps').html(msg.progress.currentKbps);
-          $('#out_time').html(msg.progress.timemark);
-          $('#out_percent').html(msg.progress.percent.toFixed(2) + "%");
+          $('#progress_bar').css('width', msg.progress.percent.toFixed(2) + "%");
         }
       }
     }

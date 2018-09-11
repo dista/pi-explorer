@@ -24,6 +24,13 @@ html
       html{
         min-height: 100%;
       }
+      #progress_bar {
+        background-color: #cabc0a;
+      }
+      #progress_bar, #progress_bar_ct {
+        border-radius: 0;
+      }
+
       body{
         background: -webkit-linear-gradient(top, rgb(255, 255, 255) 0%, rgb(247, 247, 247) 41%, rgb(241, 241, 241) 100%);
         min-height: 100%;
@@ -94,10 +101,9 @@ html
         position: fixed;
         bottom: 0px;
         background-color: #fff;
-        padding: 10px 8px;
         z-index: 100;
         box-shadow: 0px 1px 2px #ccc;
-        height: 91px;
+        height: 3em;
         width: 100%;
       }
 
@@ -122,8 +128,9 @@ html
         text-overflow: ellipsis;
         white-space: nowrap;
         overflow: hidden;
-        padding-top: 8px;
+        padding-top: 1em;
         padding-bottom: 2px;
+        text-align: center;
       }
 
       @media screen and (min-width: 960px) {
@@ -253,7 +260,7 @@ html
       }
       }
       #footer {
-        height: 90px;
+        height: 3em;
       }
       .hide {
         display: none;
@@ -261,6 +268,7 @@ html
       #status_inner {
         position: relative;
         padding-top: 8px;
+        color: #555;
       }
       #status_inner .ui.grid>.row {
         padding-bottom: 2px;
@@ -290,22 +298,11 @@ html
               i(class='film icon conv')
               | FFmpeg
       div(id='status' class='view_on_ws hide')         
+        div(class='ui top attached progress' id='progress_bar_ct')
+          div(id='progress_bar' class='bar' style='transition-duration: 300ms;')
         div(id='status_inner')
-          div(class='ui on column grid')
+          div(class='ui column grid')
             div(class='column' id='out_file')
-          div(class='ui grid')
-            div(class='row')
-              div(class='three wide column') frame
-              div(class='three wide column') fps
-              div(class='three wide column') kbps
-              div(class='four wide column') time
-              div(class='three wide column') percent
-            div(class='row')
-              div(class='three wide column' id='out_frame')
-              div(class='three wide column' id='out_fps')
-              div(class='three wide column' id='out_kbps')
-              div(class='four wide column' id='out_time')
-              div(class='three wide column' id='out_percent')
       div(id='file_container' class=hasActionBar ? 'has_bar' : 'no_bar')
         ul(id='list')
           each v in diritems
