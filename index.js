@@ -65,10 +65,31 @@ function get_cls_by_state(state){
   if(state.isDirectory()){
     return "folder outline";
   } else if(state.isFile()){
+    return "file outline";
+  }
+
+  return "";
+}
+
+function get_symbolic_cls(leaf){
+  var link = fs.readlinkSync(leaf);
+  state = fs.lstatSync(link);
+
+  if(state.isDirectory()){
+    return "folder";
+  } else if(state.isFile()){
     return "file";
   }
 
   return "";
+}
+
+function get_cls_by_state_withp(state, leaf){
+  if (state.isSymbolicLink()){
+    return get_symbolic_cls(leaf);
+  } else {
+    return get_cls_by_state(state);
+  }
 }
 
 function do_action(file_path, leaf, req, res){
@@ -90,7 +111,7 @@ function search_file(file_path, leaf, req, res){
   finder.on('path', function(p, stat){
     var bpath = p.substring(leaf.length);
     if(path.basename(bpath).toLowerCase().indexOf(sk) != -1){
-      var item = {name: path.basename(p), url: p.substring(root.length), file_type_cls: get_cls_by_state(stat)}
+      var item = {name: path.basename(p), url: p.substring(root.length), file_type_cls: get_cls_by_state_withp(stat, p)}
       diritems.push(item);
     }
   });
@@ -181,6 +202,11 @@ app.get('*', function(req, res){
     return;
   }
 
+  if (state.isSymbolicLink()) {
+    var link = fs.readlinkSync(leaf);
+    state = fs.lstatSync(link);
+  }
+
   if(state.isDirectory()){
     if(req.param('key')){
       search_file(file_path, leaf, req, res);
@@ -194,7 +220,7 @@ app.get('*', function(req, res){
 
         var fstat = fs.lstatSync(path.join(root, tmp));
 
-        var ftc = get_cls_by_state(fstat)
+        var ftc = get_cls_by_state_withp(fstat, path.join(root, tmp));
 
         var ret = {name: v, url: tmp, file_type_cls: ftc, fstat: fstat};
         if(_.startsWith(ftc, 'folder')){

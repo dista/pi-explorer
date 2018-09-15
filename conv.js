@@ -110,7 +110,7 @@ function conv(files, rm, callback, onProgress){
 
           var output = replaceExt(file, '.mp4');
           cmd.output(output)
-            .outputOptions('-threads 2')
+            .outputOptions('-threads 3')
             .on('end', function(stdout, stderr){
               console.log('end');
               goods.push(file);
