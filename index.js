@@ -147,6 +147,8 @@ function get_language(bm, ext){
     return "markup";
   }else if(ext == '.md'){
     return 'markdown';
+  }else if (ext == '.mk'){
+    return 'makefile';
   } else if(ext == '.css'){
     return 'css';
   } else if(ext == '.js'){
