@@ -6,6 +6,7 @@ html
     meta(name='viewport' content='width=device-width, initial-scale=1')
     meta(charset='UTF-8')
     link(rel='stylesheet' href='/__video-js.min.css')
+    link(rel='stylesheet' href='/__video-js.cst.css')
     script(src='/__video.min.js')
     script.
       window.HELP_IMPROVE_VIDEOJS = false;
@@ -22,6 +23,10 @@ html
         width: 100%;
         height: 100%;
       }
+
+      .video-js button {
+        outline: none;
+      }
   body 
-  video(id='my-player' class='video-js' controls preload='auto' data-setup='{}')
+  video(id='my-player' class='video-js vjs-big-play-centered vjs-default-skin' controls preload='auto' data-setup='{}')
       source(src=src)
