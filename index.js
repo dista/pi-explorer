@@ -183,6 +183,8 @@ function get_language(bm, ext){
     return 'swift';
   } else if(ext == '.s'){
     return 'nasm';
+  } else if(ext == '.pug'){
+    return 'pug';
   }
 
   return null;

@@ -27,5 +27,7 @@ html
         outline: none;
       }
   body 
-  video(id='my-player' class='video-js vjs-big-play-centered vjs-default-skin' controls preload='auto' data-setup='{}')
+  video(id='my-player' class='video-js vjs-big-play-centered vjs-default-skin' controls preload='auto')
       source(src=src)
+  script.
+    var player = videojs('my-player', {nativeControlsForTouch: true}, function(){this.play()});
