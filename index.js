@@ -51,6 +51,7 @@ app.get('/__*', function(req, res){
   }
 
   res.sendFile(file_path, options);
+  res.end();
 
   /*
   var ret = res.sendFile(file_path, options, function(result){
