@@ -46,6 +46,7 @@ script.
     var ANIMATE_DURATION = 100;
 
     $('#mask').css('top', ($('#bread_container').outerHeight() + 1) + "px");
+    $('#file_container').css('padding-top', ($('#bread_container').outerHeight() + 1) + "px");
 
     function collapse_search(){
       $('#search_input').animate({'width': '0px'}, ANIMATE_DURATION, function(){
