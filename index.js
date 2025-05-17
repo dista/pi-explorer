@@ -1,39 +1,52 @@
+// Core dependencies
 const express = require("express");
 const path = require("path");
 const fs = require("fs").promises;
 const mime = require("mime");
-const _ = require("lodash");
 const querystring = require("querystring");
+
+// Third-party dependencies
+const _ = require("lodash");
 const findit = require("findit");
 const markdown = require("markdown").markdown;
-const app = express();
-const expressWs = require("express-ws")(app);
+const expressWs = require("express-ws");
 const argv = require("minimist")(process.argv);
+
+// Local dependencies
 const media = require("./media.js");
 const notify = require("./notify.js");
 
+// Initialize Express app
+const app = express();
+expressWs(app);
+
+// Configure Express
 app.set("views", "./views");
 app.set("view engine", "pug");
 
+// Validate root directory argument
 if (!argv["r"]) {
-  console.log("usage: node index.js -r {root_of_dir}");
-  return;
+  console.error("Error: Root directory not specified.");
+  console.log("Usage: node index.js -r {root_of_dir}");
+  process.exit(1);
 }
 
-argv["r"] = _.trimEnd(argv["r"], path.sep);
+// Normalize root directory path
+const root = _.trimEnd(argv["r"], path.sep);
 
-var root = argv["r"];
-
-app.ws("/messaging", function (ws, req) {
+// WebSocket endpoint for messaging
+app.ws("/messaging", (ws, req) => {
   const clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   console.log(`New WebSocket connection from ${clientIp}`);
+
   notify.addWs(ws);
-  ws.on("message", function (msg) {
+
+  ws.on("message", (msg) => {
     console.log(`WebSocket message from ${clientIp}: ${msg}`);
     console.log(`Message length: ${msg.length} bytes`);
   });
 
-  ws.on("close", function (evt) {
+  ws.on("close", (evt) => {
     console.log(`WebSocket closed by ${clientIp}`);
     console.log(
       `Close event code: ${evt.code}, reason: ${evt.reason || "none"}`,
@@ -66,17 +79,26 @@ app.get("/__*", function (req, res) {
   */
 });
 
-async function get_cls_by_state(state) {
+/**
+ * Determines the icon class for a file or directory based on its state.
+ * @param {fs.Stats} state - File stats object.
+ * @returns {string} Icon class name.
+ */
+async function getIconClassByState(state) {
   if (state.isDirectory()) {
     return "folder outline";
   } else if (state.isFile()) {
     return "file outline";
   }
-
   return "";
 }
 
-async function get_symbolic_cls(leaf) {
+/**
+ * Determines the icon class for a symbolic link.
+ * @param {string} leaf - Path to the symbolic link.
+ * @returns {string} Icon class name.
+ */
+async function getSymbolicLinkIconClass(leaf) {
   const link = await fs.readlink(leaf);
   const state = await fs.lstat(link);
 
@@ -85,16 +107,21 @@ async function get_symbolic_cls(leaf) {
   } else if (state.isFile()) {
     return "file";
   }
-
   return "";
 }
 
-async function get_cls_by_state_withp(state, leaf) {
+/**
+ * Determines the icon class for a file or directory, handling symbolic links.
+ * @param {fs.Stats} state - File stats object.
+ * @param {string} leaf - Path to the file or directory.
+ * @returns {string} Icon class name.
+ */
+async function getIconClass(state, leaf) {
   try {
     if (state.isSymbolicLink()) {
-      return await get_symbolic_cls(leaf);
+      return await getSymbolicLinkIconClass(leaf);
     } else {
-      return await get_cls_by_state(state);
+      return await getIconClassByState(state);
     }
   } catch (err) {
     console.error(`Error determining file type for ${leaf}: ${err.message}`);
@@ -102,7 +129,7 @@ async function get_cls_by_state_withp(state, leaf) {
   }
 }
 
-async function do_action(file_path, leaf, req, res) {
+async function handleAction(file_path, leaf, req, res) {
   const value = req.param("action");
 
   if (value == "ffmpeg") {
@@ -116,7 +143,7 @@ async function do_action(file_path, leaf, req, res) {
   res.end();
 }
 
-async function search_file(file_path, leaf, req, res) {
+async function handleSearch(file_path, leaf, req, res) {
   console.log(
     `Searching for files matching "${querystring.unescape(req.param("key"))}" in directory: ${leaf}`,
   );
@@ -130,7 +157,7 @@ async function search_file(file_path, leaf, req, res) {
       const item = {
         name: path.basename(p),
         url: p.substring(root.length),
-        file_type_cls: await get_cls_by_state_withp(stat, p),
+        file_type_cls: await getIconClass(stat, p),
       };
       diritems.push(item);
     }
@@ -143,78 +170,75 @@ async function search_file(file_path, leaf, req, res) {
     res.render("list_dir", {
       title: file_path,
       diritems: diritems,
-      bread: create_bread(file_path),
+      bread: createBreadcrumbs(file_path),
     });
     res.end();
   });
 }
 
-function create_bread(file_path) {
-  var bread_items = _.trimEnd(file_path, "/").split(path.sep);
-  var cur_url = "/";
-  var bread = bread_items.map(function (v, i) {
-    cur_url = path.join(cur_url, v);
-    if (v == "") {
-      v = "Raspberry Pi";
-    }
-    return { name: v, url: cur_url, is_last: i == bread_items.length - 1 };
-  });
+/**
+ * Creates breadcrumb navigation items for a given file path.
+ * @param {string} filePath - The file path to create breadcrumbs for.
+ * @returns {Array} Array of breadcrumb items.
+ */
+function createBreadcrumbs(filePath) {
+  const breadItems = _.trimEnd(filePath, "/").split(path.sep);
+  let currentUrl = "/";
 
-  return bread;
+  return breadItems.map((item, index) => {
+    currentUrl = path.join(currentUrl, item);
+    const name = item === "" ? "Raspberry Pi" : item;
+    return {
+      name,
+      url: currentUrl,
+      isLast: index === breadItems.length - 1,
+    };
+  });
 }
 
-function get_language(bm, ext) {
-  if (bm == "Makefile") {
+/**
+ * Determines the programming language for syntax highlighting based on filename and extension.
+ * @param {string} basename - The basename of the file.
+ * @param {string} extension - The file extension.
+ * @returns {string|null} The language identifier or null if unknown.
+ */
+function getLanguage(basename, extension) {
+  // Check for special filenames
+  if (basename === "Makefile") {
     return "makefile";
-  } else if (bm == "Gemfile" || bm == "Rakefile") {
+  } else if (basename === "Gemfile" || basename === "Rakefile") {
     return "ruby";
   }
 
-  if (ext == ".html") {
-    return "markup";
-  } else if (ext == ".md") {
-    return "markdown";
-  } else if (ext == ".mk") {
-    return "makefile";
-  } else if (ext == ".css") {
-    return "css";
-  } else if (ext == ".js") {
-    return "js";
-  } else if (ext == ".sh") {
-    return "bash";
-  } else if (ext == ".c") {
-    return "c";
-  } else if (ext == ".h") {
-    return "cpp";
-  } else if (ext == ".cpp" || ext == ".cc") {
-    return "cpp";
-  } else if (ext == ".rb") {
-    return "ruby";
-  } else if (ext == ".erl" || ext == ".hrl") {
-    return "erlang";
-  } else if (ext == ".go") {
-    return "go";
-  } else if (ext == ".java") {
-    return "java";
-  } else if (ext == ".lua") {
-    return "lua";
-  } else if (ext == ".mm") {
-    return "objectivec";
-  } else if (ext == ".pl" || ext == ".perl") {
-    return "perl";
-  } else if (ext == ".php") {
-    return "php";
-  } else if (ext == ".py") {
-    return "python";
-  } else if (ext == ".swift") {
-    return "swift";
-  } else if (ext == ".s") {
-    return "nasm";
-  } else if (ext == ".pug") {
-    return "pug";
-  }
+  // Check file extensions
+  const languageMap = {
+    ".html": "markup",
+    ".md": "markdown",
+    ".mk": "makefile",
+    ".css": "css",
+    ".js": "javascript",
+    ".sh": "bash",
+    ".c": "c",
+    ".h": "cpp",
+    ".cpp": "cpp",
+    ".cc": "cpp",
+    ".rb": "ruby",
+    ".erl": "erlang",
+    ".hrl": "erlang",
+    ".go": "go",
+    ".java": "java",
+    ".lua": "lua",
+    ".mm": "objectivec",
+    ".pl": "perl",
+    ".perl": "perl",
+    ".php": "php",
+    ".py": "python",
+    ".swift": "swift",
+    ".s": "nasm",
+    ".pug": "pug",
+  };
 
-  return null;
+  return languageMap[extension] || null;
 }
 
 app.get("*", async (req, res) => {
@@ -244,18 +268,18 @@ app.get("*", async (req, res) => {
 
     if (state.isDirectory()) {
       if (req.param("key")) {
-        await search_file(file_path, leaf, req, res);
+        await handleSearch(file_path, leaf, req, res);
       } else if (req.param("action")) {
-        await do_action(file_path, leaf, req, res);
+        await handleAction(file_path, leaf, req, res);
       } else {
         const dirs = await fs.readdir(leaf);
-        const bread = create_bread(file_path);
+        const bread = createBreadcrumbs(file_path);
         const items = await Promise.all(
           dirs.map(async (v) => {
             const tmp = path.join(file_path, v);
             const fullPath = path.join(root, tmp);
             const fstat = await fs.lstat(fullPath);
-            const ftc = await get_cls_by_state_withp(fstat, fullPath);
+            const ftc = await getIconClass(fstat, fullPath);
 
             const ret = { name: v, url: tmp, file_type_cls: ftc, fstat };
             if (_.startsWith(ftc, "folder")) {
@@ -285,7 +309,7 @@ app.get("*", async (req, res) => {
     } else if (state.isFile()) {
       const extname = path.extname(leaf);
       const bm = path.basename(leaf);
-      const codename = get_language(bm, extname);
+      const codename = getLanguage(bm, extname);
 
       if (!is_raw && extname === ".mp4") {
         res.render("video", { title: file_path, src: file_path + "?raw=1" });
