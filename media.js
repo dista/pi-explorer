@@ -1,113 +1,58 @@
-var path = require('path');
-var fs = require('fs');
-var conv = require('./conv.js');
-var notify = require('./notify.js');
-//var async = require('async');
+import path from "path";
+import { promises as fs } from "fs";
+import conv from "./conv.js";
+import notify from "./notify.js";
 
-var unsupportedMediaExts = ['mov', 'mkv', 'rmvb'];
-var workingDirs = [];
+const unsupportedMediaExts = ["mov", "mkv", "rmvb"];
+const workingDirs = [];
 
-function inArray(a, c){
-  for (var i = 0; i < c.length; i++) {
-    if (c[i] == a) {
-      return true;
-    }
-  }
-
-  return false;
+function shouldConv(name) {
+  const ext = path.extname(name).toLowerCase().slice(1);
+  return unsupportedMediaExts.includes(ext);
 }
 
-function shouldConv(name){
-  var extname = path.extname(name).toLowerCase();
-
-  if (extname.length > 0 && extname[0] == '.') {
-    extname = extname.substring(1);
-  }
-
-  if (inArray(extname, unsupportedMediaExts)) {
-    return true;
-  }
-
-  return false;
+function hasHtml5UnsupportedMedia(items) {
+  return items.some((item) => shouldConv(item.name));
 }
 
-function hasHtml5UnsupportedMedia(items){
-  for (var i = 0; i < items.length; i++) {
-    var item = items[i];
-
-    if (shouldConv(item.name)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-module.exports.hasHtml5UnsupportedMedia = hasHtml5UnsupportedMedia;
-
-function toHtml5Supported(dir){
-  console.log('push to');
-  console.log(dir);
-  if (inArray(dir, workingDirs)) {
-    console.log('in array');
-    return;
-  }
-
-  workingDirs.push(dir);
-}
-
-module.exports.toHtml5Supported = toHtml5Supported;
-
-function doJobInternal(job, doneCb){
-  fs.readdir(job, function(err, files){
-    if (err) {
-      doneCb(err);
-      return;
-    }
-
-    var convFiles = files.filter(function(v){
-      return shouldConv(v);
-    }).map(function(v){
-      return path.join(job, v);
+async function doJobInternal(job) {
+  try {
+    const files = await fs.readdir(job);
+    const convFiles = files.filter(shouldConv).map((f) => path.join(job, f));
+    await new Promise((resolve, reject) => {
+      conv(
+        convFiles,
+        true,
+        (err) => (err ? reject(err) : resolve()),
+        (file, progress) => {
+          notify.notify(JSON.stringify({ file, type: "notify", progress }));
+        },
+      );
     });
-
-    conv(convFiles, true, function(err, goods, bads){
-      console.log('convert result:');
-      console.log(err);
-      console.log(goods);
-
-      doneCb();
-
-      /*
-      async.eachLimit(goods, 4, function(item, cb){
-        fs.unlink(item, cb);
-      }, function(){
-        doneCb();
-      });
-      */
-    }, function(file, progress){
-      //console.log(file);
-      //console.log(progress);
-      notify.notify(JSON.stringify({file: file, type: 'notify', progress: progress}));
-    });
-  });
+  } catch (err) {
+    console.error("Job failed:", err);
+  }
 }
 
-function doJob(){
-  if (workingDirs.length == 0) {
+async function doJob() {
+  if (workingDirs.length === 0) {
     setTimeout(doJob, 1000);
     return;
   }
+  await doJobInternal(workingDirs.shift());
+  setTimeout(doJob, 1000);
+}
 
-  var job = workingDirs[0];
-  doJobInternal(job, function(){
-    workingDirs.shift();
-    setTimeout(doJob, 1000);
-  });
+function toHtml5Supported(dir) {
+  if (!workingDirs.includes(dir)) workingDirs.push(dir);
 }
 
 function init() {
   setTimeout(doJob, 1000);
 }
 
-module.exports.init = init;
+export default {
+  toHtml5Supported,
+  init,
+  hasHtml5UnsupportedMedia,
+};
