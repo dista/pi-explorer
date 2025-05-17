@@ -1,31 +1,22 @@
-var all_ws = []
+const allWs = [];
 
-function addWs(ws){
-  all_ws.push(ws);
+function addWs(ws) {
+  allWs.push(ws);
 }
 
-module.exports.addWs = addWs;
+function removeWs(ws) {
+  const index = allWs.indexOf(ws);
+  if (index !== -1) allWs.splice(index, 1);
+}
 
-function removeWs(ws){
-  var idx = -1;
-  for (var i = 0; i < all_ws.length; i++) {
-    if (all_ws[i] == ws) {
-      idx = i;
-      break;
+function notify(msg) {
+  allWs.forEach(ws => {
+    try {
+      ws.send(msg);
+    } catch (err) {
+      console.error('Failed to send message:', err);
     }
-  }
-
-  if (idx != -1) {
-    all_ws.splice(idx, 1);
-  }
+  });
 }
 
-module.exports.removeWs = removeWs;
-
-function notify(msg){
-  for (var i = 0; i < all_ws.length; i++) {
-    all_ws[i].send(msg);
-  }
-}
-
-module.exports.notify = notify;
+module.exports = { addWs, removeWs, notify };

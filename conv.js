@@ -1,154 +1,90 @@
-var ffmpeg = require('fluent-ffmpeg');
-var async = require('async');
-var replaceExt = require('replace-ext');
-var fs = require('fs');
+const ffmpeg = require('fluent-ffmpeg');
+const replaceExt = require('replace-ext');
+const fs = require('fs').promises;
 
-//var test_files = ['/mnt/westwood/test/a.rmvb', '/mnt/westwood/test/b.MOV'];
-//var test_files = ['/mnt/westwood/test/b.MOV'];
-//var test_files = ['/mnt/westwood/test/b.MOV', '/mnt/westwood/test/c.mkv'];
-//var test_files = ['/mnt/westwood/test/a.rmvb'];
-
+// Extend ffmpeg prototype
 ffmpeg.prototype.videoQuality = function(q) {
   this._currentOutput.video('-qscale:v', '' + q);
   return this;
-}
+};
 
 ffmpeg.prototype.videoOptions = function() {
   this._currentOutput.video.apply(this, arguments);
   return this;
-}
+};
 
 ffmpeg.prototype.audioOptions = function() {
   this._currentOutput.audio.apply(this, arguments);
   return this;
-}
+};
 
 ffmpeg.prototype.audioQuality = function(q) {
   this._currentOutput.audio('-qscale:a', '' + q);
   return this;
-}
+};
 
-function conv(files, rm, callback, onProgress){
-  var goods = [];
-  var bads = [];
-  async.eachOfSeries(files, function(file, index, main_cb){
-    console.log(file);
-
-    async.waterfall([
-        function(cb){
-          ffmpeg(file).ffprobe(function(err, meta){
-            if (err) {
-              return cb(err);
-            }
-
-            var copyVideo = false;
-            var hasVideo = false;
-            var copyAudio = false;
-            var hasAudio = false;
-            for (var i = 0; i < meta.streams.length; i++) {
-              var stream = meta.streams[i];
-
-              if (stream.codec_type == 'video') {
-                hasVideo = true;
-               
-                if (stream.codec_name == 'h264') {
-                  copyVideo = true;
-                }
-              } else if (stream.codec_type == 'audio') {
-                hasAudio = true;
-
-                if (stream.codec_name == 'aac') {
-                  copyAudio = true;
-                }
-              }
-            }
-
-            cb(null, hasVideo, copyVideo, hasAudio, copyAudio);
-          });
-        },
-        function(hasVideo, copyVideo, hasAudio, copyAudio, cb){
-          console.log("analyze");
-          console.log(hasVideo);
-          console.log(copyVideo);
-          console.log(hasAudio);
-          console.log(copyAudio);
-
-          if (!hasVideo && !hasAudio) {
-            return cb("no media");
+async function analyzeFile(file) {
+  return new Promise((resolve, reject) => {
+    ffmpeg(file).ffprobe((err, meta) => {
+      if (err) reject(err);
+      else {
+        let hasVideo = false, copyVideo = false, hasAudio = false, copyAudio = false;
+        meta.streams.forEach(stream => {
+          if (stream.codec_type === 'video') {
+            hasVideo = true;
+            if (stream.codec_name === 'h264') copyVideo = true;
+          } else if (stream.codec_type === 'audio') {
+            hasAudio = true;
+            if (stream.codec_name === 'aac') copyAudio = true;
           }
-
-          var cmd = ffmpeg(file);
-
-          if (hasVideo){
-            if (copyVideo) {
-              cmd.videoCodec('copy');
-            } else {
-              cmd.withVideoCodec('libx264')
-                .videoQuality(0)
-                .videoOptions('-preset', 'fast');
-            }
-          } else {
-            cmd.noVideo();
-          }
-
-          if (hasAudio){
-            if (copyAudio) {
-              cmd.audioCodec('copy');
-            } else {
-              cmd.withAudioCodec('libfaac')
-                .audioQuality(0);
-            }
-          } else {
-            cmd.noAudio();
-          }
-
-          if (onProgress){
-            cmd.on('progress', function(progress){
-              onProgress(file, progress);
-            });
-          }
-
-          var output = replaceExt(file, '.mp4');
-          cmd.output(output)
-            .outputOptions('-threads 3')
-            .on('end', function(stdout, stderr){
-              console.log('end');
-              goods.push(file);
-
-              if (rm) {
-                fs.unlink(file, function(){
-                  cb(null);
-                });
-              } else {
-                cb(null);
-              }
-            })
-            .on('error', function(err, stdout, stderr){
-              console.log(err);
-              bads.push(file);
-              cb(err);
-            }).run();
-
-        }
-    ], function(err, result){
-      main_cb(null);
-    })
-  }, function(err){
-    callback(err, goods, bads);
+        });
+        resolve({ hasVideo, copyVideo, hasAudio, copyAudio });
+      }
+    });
   });
 }
 
-/*
-conv(test_files, function(err){
-  console.log('done');
-});
-*/
+async function convertFile(file, rm, onProgress) {
+  try {
+    const { hasVideo, copyVideo, hasAudio, copyAudio } = await analyzeFile(file);
+    if (!hasVideo && !hasAudio) throw new Error('No media streams found');
+
+    const cmd = ffmpeg(file);
+    if (hasVideo) {
+      if (copyVideo) cmd.videoCodec('copy');
+      else cmd.withVideoCodec('libx264').videoQuality(0).videoOptions('-preset', 'fast');
+    } else cmd.noVideo();
+
+    if (hasAudio) {
+      if (copyAudio) cmd.audioCodec('copy');
+      else cmd.withAudioCodec('libfaac').audioQuality(0);
+    } else cmd.noAudio();
+
+    if (onProgress) cmd.on('progress', progress => onProgress(file, progress));
+
+    const output = replaceExt(file, '.mp4');
+    await new Promise((resolve, reject) => {
+      cmd.output(output)
+        .outputOptions('-threads 3')
+        .on('end', () => resolve())
+        .on('error', err => reject(err))
+        .run();
+    });
+
+    if (rm) await fs.unlink(file);
+    return { success: true, file };
+  } catch (err) {
+    return { success: false, file, error: err };
+  }
+}
+
+async function conv(files, rm, callback, onProgress) {
+  const goods = [], bads = [];
+  for (const file of files) {
+    const result = await convertFile(file, rm, onProgress);
+    result.success ? goods.push(result.file) : bads.push(result.file);
+  }
+  callback(null, goods, bads);
+}
 
 module.exports = conv;
-
-/*
-ffmpeg('/mnt/westwood/test/a.rmvb').ffprobe(function(err, data){
-  console.log(err);
-  console.log(data);
-});
-*/
