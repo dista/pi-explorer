@@ -154,7 +154,7 @@ async function getIconClass(state, leaf) {
 }
 
 async function handleAction(file_path, leaf, req, res) {
-  const value = req.param("action");
+  const value = req.query.action;
 
   if (value == "ffmpeg") {
     logWithTimestamp(
@@ -178,11 +178,11 @@ async function handleAction(file_path, leaf, req, res) {
 
 async function handleSearch(file_path, leaf, req, res) {
   logWithTimestamp(
-    `Searching for files matching "${querystring.unescape(req.param("key"))}" in directory: ${leaf}`,
+    `Searching for files matching "${querystring.unescape(req.query.key)}" in directory: ${leaf}`,
     "magenta",
   );
   const finder = findit(leaf);
-  const sk = querystring.unescape(req.param("key")).toLowerCase();
+  const sk = querystring.unescape(req.query.key).toLowerCase();
   const diritems = [];
 
   finder.on("path", async (p, stat) => {
@@ -278,7 +278,7 @@ function getSyntaxHighlightingLanguage(basename, extension) {
 
 app.get("*", async (req, res) => {
   const file_path = querystring.unescape(req.path);
-  const is_raw = !!req.param("raw");
+  const is_raw = !!req.query.raw;
   const leaf = path.join(root, file_path);
 
   try {
@@ -302,9 +302,9 @@ app.get("*", async (req, res) => {
     }
 
     if (state.isDirectory()) {
-      if (req.param("key")) {
+      if (req.query.key) {
         await handleSearch(file_path, leaf, req, res);
-      } else if (req.param("action")) {
+      } else if (req.query.action) {
         await handleAction(file_path, leaf, req, res);
       } else {
         const dirs = await fs.readdir(leaf);
