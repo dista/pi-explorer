@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "async": "^2.6.1",
+    "chalk": "^5.4.1",
     "express": "^4.17.1",
     "express-ws": "^4.0.0",
     "findit": "^2.0.0",

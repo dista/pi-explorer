@@ -11,10 +11,31 @@ const findit = require("findit");
 const markdown = require("markdown").markdown;
 const expressWs = require("express-ws");
 const argv = require("minimist")(process.argv);
+const chalkImport = require("chalk");
+const chalk = chalkImport.default || chalkImport;
 
 // Local dependencies
 const media = require("./media.js");
 const notify = require("./notify.js");
+
+// Helper function for logging with timestamp and color
+function logWithTimestamp(message, color = "white") {
+  const timestamp = new Date().toISOString();
+  const text = `[${timestamp}] ${message}`;
+
+  if (typeof color === "string") {
+    try {
+      const colorFn = chalk.keyword(color);
+      console.log(colorFn(text));
+      return;
+    } catch {
+      // invalid color: fall through to plain output
+    }
+  }
+
+  // default or invalid color: no styling
+  console.log(text);
+}
 
 // Initialize Express app
 const app = express();
@@ -37,19 +58,20 @@ const root = _.trimEnd(argv["r"], path.sep);
 // WebSocket endpoint for messaging
 app.ws("/messaging", (ws, req) => {
   const clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-  console.log(`New WebSocket connection from ${clientIp}`);
+  logWithTimestamp(`New WebSocket connection from ${clientIp}`, "green");
 
   notify.addWs(ws);
 
   ws.on("message", (msg) => {
-    console.log(`WebSocket message from ${clientIp}: ${msg}`);
-    console.log(`Message length: ${msg.length} bytes`);
+    logWithTimestamp(`WebSocket message from ${clientIp}: ${msg}`, "blue");
+    logWithTimestamp(`Message length: ${msg.length} bytes`, "blue");
   });
 
   ws.on("close", (evt) => {
-    console.log(`WebSocket closed by ${clientIp}`);
-    console.log(
+    logWithTimestamp(`WebSocket closed by ${clientIp}`, "yellow");
+    logWithTimestamp(
       `Close event code: ${evt.code}, reason: ${evt.reason || "none"}`,
+      "yellow",
     );
     notify.removeWs(ws);
   });
@@ -124,7 +146,10 @@ async function getIconClass(state, leaf) {
       return await getIconClassByState(state);
     }
   } catch (err) {
-    console.error(`Error determining file type for ${leaf}: ${err.message}`);
+    logWithTimestamp(
+      `Error determining file type for ${leaf}: ${err.message}`,
+      "red",
+    );
     return "file outline"; // Fallback icon
   }
 }
@@ -133,19 +158,29 @@ async function handleAction(file_path, leaf, req, res) {
   const value = req.param("action");
 
   if (value == "ffmpeg") {
-    console.log(`Converting media file to HTML5-supported format: ${leaf}`);
-    console.log(`Conversion started at: ${new Date().toISOString()}`);
+    logWithTimestamp(
+      `Converting media file to HTML5-supported format: ${leaf}`,
+      "cyan",
+    );
+    logWithTimestamp(
+      `Conversion started at: ${new Date().toISOString()}`,
+      "cyan",
+    );
     await media.toHtml5Supported(leaf);
-    console.log(`Media conversion completed for: ${leaf}`);
-    console.log(`Conversion ended at: ${new Date().toISOString()}`);
+    logWithTimestamp(`Media conversion completed for: ${leaf}`, "cyan");
+    logWithTimestamp(
+      `Conversion ended at: ${new Date().toISOString()}`,
+      "cyan",
+    );
   }
 
   res.end();
 }
 
 async function handleSearch(file_path, leaf, req, res) {
-  console.log(
+  logWithTimestamp(
     `Searching for files matching "${querystring.unescape(req.param("key"))}" in directory: ${leaf}`,
+    "magenta",
   );
   const finder = findit(leaf);
   const sk = querystring.unescape(req.param("key")).toLowerCase();
@@ -164,8 +199,9 @@ async function handleSearch(file_path, leaf, req, res) {
   });
 
   finder.on("end", () => {
-    console.log(
+    logWithTimestamp(
       `Search completed. Found ${diritems.length} items matching the query.`,
+      "magenta",
     );
     res.render("list_dir", {
       title: file_path,
@@ -247,23 +283,23 @@ app.get("*", async (req, res) => {
   const leaf = path.join(root, file_path);
 
   try {
-    console.log(`Accessing file/directory: ${leaf}`);
+    logWithTimestamp(`Accessing file/directory: ${leaf}`, "white");
     let state;
     try {
       state = await fs.lstat(leaf);
     } catch (err) {
       if (err.code === "ENOENT") {
-        console.error(`File/directory not found: ${leaf}`);
+        logWithTimestamp(`File/directory not found: ${leaf}`, "red");
         return res.status(404).send("File/directory not found");
       }
       throw err;
     }
 
     if (state.isSymbolicLink()) {
-      console.log(`Resolving symbolic link: ${leaf}`);
+      logWithTimestamp(`Resolving symbolic link: ${leaf}`, "white");
       const link = await fs.readlink(leaf);
       state = await fs.lstat(link);
-      console.log(`Symbolic link resolved to: ${link}`);
+      logWithTimestamp(`Symbolic link resolved to: ${link}`, "white");
     }
 
     if (state.isDirectory()) {
@@ -351,13 +387,16 @@ app.get("*", async (req, res) => {
 
     res.end("not implemented");
   } catch (err) {
-    console.error(`Error processing request for ${leaf}: ${err.message}`);
-    console.error(`Stack trace: ${err.stack}`);
+    logWithTimestamp(
+      `Error processing request for ${leaf}: ${err.message}`,
+      "red",
+    );
+    logWithTimestamp(`Stack trace: ${err.stack}`, "red");
     res.status(400).end();
   }
 });
 
 media.init();
 app.listen(8003, () => {
-  console.log(`Server is running on port 8003`);
+  logWithTimestamp(`Server is running on port 8003`, "green");
 });
