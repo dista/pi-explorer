@@ -202,7 +202,7 @@ function createBreadcrumbs(filePath) {
  * @param {string} extension - The file extension.
  * @returns {string|null} The language identifier or null if unknown.
  */
-function getLanguage(basename, extension) {
+function getSyntaxHighlightingLanguage(basename, extension) {
   // Check for special filenames
   if (basename === "Makefile") {
     return "makefile";
@@ -309,7 +309,7 @@ app.get("*", async (req, res) => {
     } else if (state.isFile()) {
       const extname = path.extname(leaf);
       const bm = path.basename(leaf);
-      const codename = getLanguage(bm, extname);
+      const codename = getSyntaxHighlightingLanguage(bm, extname);
 
       if (!is_raw && extname === ".mp4") {
         res.render("video", { title: file_path, src: file_path + "?raw=1" });
