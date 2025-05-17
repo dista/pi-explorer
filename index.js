@@ -1,22 +1,22 @@
 // Core dependencies
-const express = require("express");
-const path = require("path");
-const fs = require("fs").promises;
-const mime = require("mime");
-const querystring = require("querystring");
+import express from "express";
+import path from "path";
+import { promises as fs } from "fs";
+import mime from "mime";
+import querystring from "querystring";
 
 // Third-party dependencies
-const _ = require("lodash");
-const findit = require("findit");
-const markdown = require("markdown").markdown;
-const expressWs = require("express-ws");
-const argv = require("minimist")(process.argv);
-const chalkImport = require("chalk");
+import _ from "lodash";
+import findit from "findit";
+import { markdown } from "markdown";
+import expressWs from "express-ws";
+import minimist from "minimist";
+import chalkImport from "chalk";
 const chalk = chalkImport.default || chalkImport;
 
 // Local dependencies
-const media = require("./media.js");
-const notify = require("./notify.js");
+import media from "./media.js";
+import notify from "./notify.js";
 
 // Helper function for logging with timestamp and color
 function logWithTimestamp(message, color = "white") {
@@ -46,14 +46,13 @@ app.set("views", "./views");
 app.set("view engine", "pug");
 
 // Validate root directory argument
-if (!argv["r"]) {
+const rootArgIndex = process.argv.indexOf("-r");
+if (rootArgIndex === -1 || !process.argv[rootArgIndex + 1]) {
   console.error("Error: Root directory not specified.");
   console.log("Usage: node index.js -r {root_of_dir}");
   process.exit(1);
 }
-
-// Normalize root directory path
-const root = _.trimEnd(argv["r"], path.sep);
+const root = _.trimEnd(process.argv[rootArgIndex + 1], path.sep);
 
 // WebSocket endpoint for messaging
 app.ws("/messaging", (ws, req) => {
@@ -81,8 +80,9 @@ app.get("/__*", function (req, res) {
   var file_path = querystring.unescape(req.path.substring(3));
 
   var content_type = mime.lookup(file_path);
+  const dirname = path.dirname(new URL(import.meta.url).pathname);
   var options = {
-    root: path.join(__dirname, "asserts"),
+    root: path.join(dirname, "asserts"),
     dotfiles: "deny",
     headers: {
       "Content-Type": content_type,

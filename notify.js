@@ -10,13 +10,13 @@ function removeWs(ws) {
 }
 
 function notify(msg) {
-  allWs.forEach(ws => {
+  allWs.forEach((ws) => {
     try {
       ws.send(msg);
     } catch (err) {
-      console.error('Failed to send message:', err);
+      console.error("Failed to send message:", err);
     }
   });
 }
 
-module.exports = { addWs, removeWs, notify };
+export default { addWs, removeWs, notify };

@@ -1,6 +1,6 @@
-const ffmpeg = require("fluent-ffmpeg");
-const replaceExt = require("replace-ext");
-const fs = require("fs").promises;
+import ffmpeg from "fluent-ffmpeg";
+import replaceExt from "replace-ext";
+import { promises as fs } from "fs";
 
 // Extend ffmpeg prototype
 ffmpeg.prototype.videoQuality = function (q) {
@@ -98,4 +98,4 @@ async function conv(files, rm, callback, onProgress) {
   callback(null, goods, bads);
 }
 
-module.exports = conv;
+export default conv;
