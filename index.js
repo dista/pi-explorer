@@ -57,13 +57,13 @@ app.ws("/messaging", (ws, req) => {
 
   ws.on("message", (msg) => {
     logger.info(`WebSocket message from ${clientIp}: ${msg}`);
-    logger.info(`Message length: ${msg.length} bytes`);
+    logger.info(`WebSocket Message length: ${msg.length} bytes`);
   });
 
   ws.on("close", (evt) => {
     logger.warn(`WebSocket closed by ${clientIp}`);
     logger.warn(
-      `Close event code: ${evt.code}, reason: ${evt.reason || "none"}`,
+      `WebSocket Close event code: ${evt.code}, reason: ${evt.reason || "none"}`,
     );
     notify.removeWs(ws);
   });
