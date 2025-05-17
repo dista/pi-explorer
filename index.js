@@ -11,8 +11,7 @@ import findit from "findit";
 import { markdown } from "markdown";
 import expressWs from "express-ws";
 import minimist from "minimist";
-import chalkImport from "chalk";
-const chalk = chalkImport.default || chalkImport;
+import chalk from "chalk";
 
 // Local dependencies
 import media from "./media.js";
