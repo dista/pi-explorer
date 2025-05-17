@@ -25,15 +25,19 @@ argv["r"] = _.trimEnd(argv["r"], path.sep);
 var root = argv["r"];
 
 app.ws("/messaging", function (ws, req) {
-  console.log("new req");
+  const clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  console.log(`New WebSocket connection from ${clientIp}`);
   notify.addWs(ws);
   ws.on("message", function (msg) {
-    console.log("websocket message");
-    console.log(msg);
+    console.log(`WebSocket message from ${clientIp}: ${msg}`);
+    console.log(`Message length: ${msg.length} bytes`);
   });
 
   ws.on("close", function (evt) {
-    console.log("close websocket");
+    console.log(`WebSocket closed by ${clientIp}`);
+    console.log(
+      `Close event code: ${evt.code}, reason: ${evt.reason || "none"}`,
+    );
     notify.removeWs(ws);
   });
 });
@@ -55,6 +59,7 @@ app.get("/__*", function (req, res) {
   /*
   var ret = res.sendFile(file_path, options, function(result){
     if(result != null){
+          console.error(`Error processing request for ${file_path}: ${err.message}`);
       res.status(400).end();
     }
   });
@@ -85,10 +90,15 @@ async function get_symbolic_cls(leaf) {
 }
 
 async function get_cls_by_state_withp(state, leaf) {
-  if (state.isSymbolicLink()) {
-    return await get_symbolic_cls(leaf);
-  } else {
-    return await get_cls_by_state(state);
+  try {
+    if (state.isSymbolicLink()) {
+      return await get_symbolic_cls(leaf);
+    } else {
+      return await get_cls_by_state(state);
+    }
+  } catch (err) {
+    console.error(`Error determining file type for ${leaf}: ${err.message}`);
+    return "file outline"; // Fallback icon
   }
 }
 
@@ -96,13 +106,20 @@ async function do_action(file_path, leaf, req, res) {
   const value = req.param("action");
 
   if (value == "ffmpeg") {
+    console.log(`Converting media file to HTML5-supported format: ${leaf}`);
+    console.log(`Conversion started at: ${new Date().toISOString()}`);
     await media.toHtml5Supported(leaf);
+    console.log(`Media conversion completed for: ${leaf}`);
+    console.log(`Conversion ended at: ${new Date().toISOString()}`);
   }
 
   res.end();
 }
 
 async function search_file(file_path, leaf, req, res) {
+  console.log(
+    `Searching for files matching "${querystring.unescape(req.param("key"))}" in directory: ${leaf}`,
+  );
   const finder = findit(leaf);
   const sk = querystring.unescape(req.param("key")).toLowerCase();
   const diritems = [];
@@ -120,6 +137,9 @@ async function search_file(file_path, leaf, req, res) {
   });
 
   finder.on("end", () => {
+    console.log(
+      `Search completed. Found ${diritems.length} items matching the query.`,
+    );
     res.render("list_dir", {
       title: file_path,
       diritems: diritems,
@@ -203,11 +223,23 @@ app.get("*", async (req, res) => {
   const leaf = path.join(root, file_path);
 
   try {
-    let state = await fs.lstat(leaf);
+    console.log(`Accessing file/directory: ${leaf}`);
+    let state;
+    try {
+      state = await fs.lstat(leaf);
+    } catch (err) {
+      if (err.code === "ENOENT") {
+        console.error(`File/directory not found: ${leaf}`);
+        return res.status(404).send("File/directory not found");
+      }
+      throw err;
+    }
 
     if (state.isSymbolicLink()) {
+      console.log(`Resolving symbolic link: ${leaf}`);
       const link = await fs.readlink(leaf);
       state = await fs.lstat(link);
+      console.log(`Symbolic link resolved to: ${link}`);
     }
 
     if (state.isDirectory()) {
@@ -295,9 +327,13 @@ app.get("*", async (req, res) => {
 
     res.end("not implemented");
   } catch (err) {
+    console.error(`Error processing request for ${leaf}: ${err.message}`);
+    console.error(`Stack trace: ${err.stack}`);
     res.status(400).end();
   }
 });
 
 media.init();
-app.listen(8003);
+app.listen(8003, () => {
+  console.log(`Server is running on port 8003`);
+});
