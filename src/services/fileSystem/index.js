@@ -40,8 +40,9 @@ export class FileSystemService {
    */
   async getSymbolicLinkIconClass(leaf) {
     try {
-      const link = await fs.readlink(leaf);
-      const state = await fs.lstat(link);
+      // fs.stat follows the symlink fully: relative targets are resolved
+      // against the link's directory and chains of links are traversed
+      const state = await fs.stat(leaf);
 
       if (state.isDirectory()) {
         return 'folder';
@@ -140,20 +141,37 @@ export class FileSystemService {
   }
 
   /**
+   * Resolve a client-supplied path relative to the root directory,
+   * ensuring the result stays inside the root (blocks path traversal).
+   * @param {string} currentPath - Path relative to the root
+   * @returns {string} Absolute path within the root
+   * @throws {Error} If the resolved path escapes the root directory
+   */
+  resolvePath(currentPath) {
+    const resolvedRoot = path.resolve(this.root);
+    const resolvedLeaf = path.resolve(path.join(this.root, currentPath));
+
+    // Allow the root itself, but nothing above it
+    if (resolvedLeaf !== resolvedRoot && !resolvedLeaf.startsWith(resolvedRoot + path.sep)) {
+      const err = new Error(`Access denied: path resolves outside root directory: ${currentPath}`);
+      err.status = 404;
+      throw err;
+    }
+
+    return path.join(this.root, currentPath);
+  }
+
+  /**
    * Get file stats with symbolic link resolution
    * @param {string} fullPath - Full path to the file/directory
    * @returns {Promise<fs.Stats>} File stats
    */
   async getFileStats(fullPath) {
     try {
-      let state = await fs.lstat(fullPath);
-
-      if (state.isSymbolicLink()) {
-        this.logger.info(`Resolving symbolic link: ${fullPath}`);
-        const link = await fs.readlink(fullPath);
-        state = await fs.lstat(link);
-        this.logger.info(`Symbolic link resolved to: ${link}`);
-      }
+      // fs.stat resolves symbolic links: handles relative targets (resolved
+      // against the link's directory) and chains of links. Throws ELOOP on
+      // symlink cycles and ENOENT for dangling links.
+      const state = await fs.stat(fullPath);
 
       return state;
     } catch (err) {
@@ -170,7 +188,7 @@ export class FileSystemService {
    * @returns {Promise<Object>} Directory listing with items and breadcrumbs
    */
   async listDirectory(currentPath) {
-    const leaf = path.join(this.root, currentPath);
+    const leaf = this.resolvePath(currentPath);
     this.logger.info(`Listing directory: ${leaf}`);
 
     const state = await this.getFileStats(leaf);
@@ -214,7 +232,7 @@ export class FileSystemService {
    * @returns {Promise<Array>} Array of matching file items
    */
   async searchDirectory(currentPath, searchTerm) {
-    const leaf = path.join(this.root, currentPath);
+    const leaf = this.resolvePath(currentPath);
     this.logger.info(`Searching for files matching "${searchTerm}" in directory: ${leaf}`);
 
     const state = await this.getFileStats(leaf);
@@ -226,22 +244,35 @@ export class FileSystemService {
       const finder = findit(leaf);
       const sk = searchTerm.toLowerCase();
       const diritems = [];
+      // Track in-flight icon lookups so 'end' resolves only after every
+      // matching item has been pushed (otherwise results can be dropped).
+      const pending = [];
 
-      finder.on('path', async (p, stat) => {
+      finder.on('path', (p, stat) => {
         const bpath = p.substring(leaf.length);
         if (path.basename(bpath).toLowerCase().indexOf(sk) !== -1) {
-          const item = {
-            name: path.basename(p),
-            url: p.substring(this.root.length),
-            file_type_cls: await this.getIconClass(stat, p),
-          };
-          diritems.push(item);
+          pending.push(
+            this.getIconClass(stat, p)
+              .then((file_type_cls) => {
+                diritems.push({
+                  name: path.basename(p),
+                  url: p.substring(this.root.length),
+                  file_type_cls,
+                });
+              })
+              .catch((err) => this.logger.error(`Search icon error for ${p}: ${err.message}`))
+          );
         }
       });
 
-      finder.on('end', () => {
-        this.logger.info(`Search completed. Found ${diritems.length} items matching the query.`);
-        resolve(diritems);
+      finder.on('end', async () => {
+        try {
+          await Promise.all(pending);
+          this.logger.info(`Search completed. Found ${diritems.length} items matching the query.`);
+          resolve(diritems);
+        } catch (err) {
+          reject(err);
+        }
       });
 
       finder.on('error', (err) => {
@@ -252,24 +283,13 @@ export class FileSystemService {
   }
 
   /**
-   * Check if a file should be converted (HTML5 unsupported media)
-   * @param {Array} items - Directory items
-   * @returns {boolean} True if any items need conversion
-   */
-  hasHtml5UnsupportedMedia(items) {
-    // This method will be integrated with MediaService later
-    // For now, return false as media conversion logic is separate
-    return false;
-  }
-
-  /**
    * Get file content with appropriate handling
    * @param {string} currentPath - Relative path from root
    * @param {boolean} isRaw - Whether to return raw file
    * @returns {Promise<Object>} File content and metadata
    */
   async getFileContent(currentPath, isRaw = false) {
-    const leaf = path.join(this.root, currentPath);
+    const leaf = this.resolvePath(currentPath);
     this.logger.info(`Accessing file: ${leaf}`);
 
     const state = await this.getFileStats(leaf);

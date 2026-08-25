@@ -34,10 +34,9 @@ export class SearchController {
         diritems: diritems,
         bread,
       });
-      res.end();
     } catch (error) {
       this.logger.error(`Search error: ${error.message}`);
-      res.status(400).end();
+      res.status(error.status || 400).end();
     }
   }
 }

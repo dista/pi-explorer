@@ -88,12 +88,13 @@ script.
     });
   });
 
-  function ffmpeg_it(url) {
+  function ffmpeg_it() {
     if($("#ffmpeg").hasClass('loading')){
       return;
     }
 
     $("#ffmpeg").addClass('loading');
+    var url = $("#ffmpeg").data('url');
     $.get(url + '?action=ffmpeg');
 
   }

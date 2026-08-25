@@ -37,33 +37,10 @@ export class DirectoryController {
         shouldConv,
         hasActionBar,
       });
-      res.end();
     } catch (error) {
       this.logger.error(`Error listing directory ${leaf}: ${error.message}`);
       this.logger.error(`Stack trace: ${error.stack}`);
-      res.status(400).end();
-    }
-  }
-
-  /**
-   * Handle directory requests (with optional query parameters)
-   * This is a convenience method that routes to search or action if query params present
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   * @param {Function} next - Express next middleware function
-   */
-  async handleDirectory(req, res, next) {
-    const { key, action } = req.query;
-
-    if (key) {
-      // Delegate to search controller
-      return next();
-    } else if (action) {
-      // Delegate to action controller
-      return next();
-    } else {
-      // Handle directory listing
-      return await this.listDirectory(req, res);
+      res.status(error.status || 400).end();
     }
   }
 }

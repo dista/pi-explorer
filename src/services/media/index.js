@@ -113,7 +113,7 @@ export class MediaConverter {
           cmd.audioCodec('copy');
         } else {
           cmd
-            .withAudioCodec(this.config.media.conversion.audioCodec || 'libfaac')
+            .withAudioCodec(this.config.media.conversion.audioCodec || 'aac')
             .audioQuality(this.config.media.conversion.quality || 0);
         }
       } else {
@@ -128,7 +128,8 @@ export class MediaConverter {
       await new Promise((resolve, reject) => {
         cmd
           .output(output)
-          .outputOptions(`-threads ${this.config.media.conversion.threads || 3}`)
+          // -y overwrites an existing output file instead of failing
+          .outputOptions('-y', `-threads ${this.config.media.conversion.threads || 3}`)
           .on('end', () => resolve())
           .on('error', (err) => reject(err))
           .run();

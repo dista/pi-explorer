@@ -296,7 +296,7 @@ html
               li(class='sep') /
         div(id='action_bar' class='search_related')
           if shouldConv
-            button(id='ffmpeg' class='ui icon green button tiny' onclick='ffmpeg_it("' + bread[bread.length - 1].url + '")')
+            button(id='ffmpeg' class='ui icon green button tiny' data-url=bread[bread.length - 1].url onclick='ffmpeg_it()')
               i(class='film icon conv')
               | FFmpeg
       div(id='status' class='view_on_ws hide')         

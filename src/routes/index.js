@@ -1,6 +1,5 @@
 import express from 'express';
 import querystring from 'querystring';
-import path from 'path';
 
 /**
  * Create and configure the main application router
@@ -9,7 +8,6 @@ import path from 'path';
  */
 export function createRouter(options) {
   const {
-    config,
     logger,
     fileSystemService,
     mediaService,
@@ -21,7 +19,6 @@ export function createRouter(options) {
   } = options;
 
   const router = express.Router();
-  const root = config.server.rootDirectory;
 
   /**
    * Main catch-all route handler
@@ -32,7 +29,8 @@ export function createRouter(options) {
       // Parse file path from request
       const file_path = querystring.unescape(req.path);
       const is_raw = !!req.query.raw;
-      const leaf = path.join(root, file_path);
+      // resolvePath validates the path stays inside the root directory
+      const leaf = fileSystemService.resolvePath(file_path);
 
       // Attach to request for controllers to use
       req.file_path = file_path;
@@ -76,7 +74,7 @@ export function createRouter(options) {
     } catch (err) {
       logger.error(`Error processing request for ${req.path}: ${err.message}`);
       logger.error(`Stack trace: ${err.stack}`);
-      res.status(400).end();
+      res.status(err.status || 400).end();
     }
   });
 

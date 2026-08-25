@@ -1,6 +1,30 @@
 import { promises as fs } from 'fs';
 import { markdown } from 'markdown';
+import sanitizeHtml from 'sanitize-html';
 import path from 'path';
+
+// Sanitize markdown output before rendering. Markdown files are treated as
+// untrusted content, so strip scripts, event handlers, and dangerous URLs.
+const markdownSanitizeOptions = {
+  allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'table', 'thead', 'tbody', 'tr', 'th', 'td',
+    'del', 'sup', 'sub', 'kbd', 'samp',
+  ]),
+  allowedAttributes: {
+    a: ['href', 'name', 'title', 'rel'],
+    img: ['src', 'alt', 'title', 'width', 'height'],
+    th: ['align'],
+    td: ['align'],
+  },
+  allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+  allowedSchemesByTag: {
+    img: ['http', 'https', 'data'],
+  },
+  transformTags: {
+    a: sanitizeHtml.simpleTransform('a', { rel: 'noopener noreferrer' }),
+  },
+};
 
 /**
  * File Controller for handling file serving and content display
@@ -35,7 +59,6 @@ export class FileController {
       if (!is_raw && fileInfo.extname === '.mp4') {
         this.logger.info(`Rendering video player for: ${leaf}`);
         res.render('video', { title: file_path, src: file_path + '?raw=1' });
-        res.end();
         return;
       }
 
@@ -55,23 +78,21 @@ export class FileController {
         const content = await fs.readFile(fileInfo.fullPath, 'utf8');
         res.render('markdown', {
           title: file_path,
-          markdown: markdown.toHTML(content),
+          markdown: sanitizeHtml(markdown.toHTML(content), markdownSanitizeOptions),
         });
-        res.end();
       } else {
         this.logger.info(`Rendering code file with syntax highlighting: ${leaf}`);
-        const content = await fs.readFile(fileInfo.fullPath);
+        const content = await fs.readFile(fileInfo.fullPath, 'utf8');
         res.render('code', {
           title: file_path,
           lang: fileInfo.codename,
           code: content,
         });
-        res.end();
       }
     } catch (error) {
       this.logger.error(`Error serving file ${leaf}: ${error.message}`);
       this.logger.error(`Stack trace: ${error.stack}`);
-      res.status(400).end();
+      res.status(error.status || 400).end();
     }
   }
 }

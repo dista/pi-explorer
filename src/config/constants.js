@@ -6,7 +6,7 @@ export const DEFAULT_ROOT_DIRECTORY = null; // Must be provided via CLI or env
 // Media conversion
 export const UNSUPPORTED_MEDIA_EXTENSIONS = ['mov', 'mkv', 'rmvb'];
 export const DEFAULT_VIDEO_CODEC = 'libx264';
-export const DEFAULT_AUDIO_CODEC = 'libfaac';
+export const DEFAULT_AUDIO_CODEC = 'aac';
 export const DEFAULT_QUALITY = 0;
 export const DEFAULT_PRESET = 'fast';
 export const DEFAULT_THREADS = 3;

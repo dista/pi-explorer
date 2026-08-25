@@ -41,7 +41,7 @@ Create a `.env` file with optional settings:
 
 **Media Conversion:**
 - `VIDEO_CODEC`: Default `libx264`
-- `AUDIO_CODEC`: Default `libfaac`
+- `AUDIO_CODEC`: Default `aac`
 - `QUALITY`: 0-51, default `0`
 - `PRESET`: Default `fast`
 - `THREADS`: 1-16, default `3`
